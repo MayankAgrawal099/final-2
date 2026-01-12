@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Live Detection - VisionIQ{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header-compact">
+        <h2>Live Defect Detection</h2>
+        <div class="detection-controls-compact">
+            <div class="control-group">
+                <button id="startBtn" class="btn btn-primary">Start Detection</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>Stop Detection</button>
+            </div>
+            <div class="status-indicator">
+                <span id="statusDot" class="status-dot status-inactive"></span>
+                <span id="statusText">Inactive</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="detection-layout">
+        <div class="video-container-compact">
+            <div class="video-wrapper-compact">
+                <img id="videoStream" src="{{ url_for('video_feed') }}" alt="Video Stream">
+            </div>
+        </div>
+
+        <div class="stats-panel-compact">
+            <div class="stat-card-compact">
+                <div class="stat-label">Active Defects</div>
+                <div class="stat-value-compact" id="activeDefects">0</div>
+            </div>
+            <div class="stat-card-compact">
+                <div class="stat-label">Total Detected</div>
+                <div class="stat-value-compact" id="totalDetected">0</div>
+            </div>
+            <div class="stat-card-compact">
+                <div class="stat-label">Detection Status</div>
+                <div class="stat-value-compact" id="detectionStatus">Ready</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live detection page JavaScript
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const activeDefects = document.getElementById('activeDefects');
+    const totalDetected = document.getElementById('totalDetected');
+    const detectionStatus = document.getElementById('detectionStatus');
+
+    let statusCheckInterval = null;
+
+    function updateStatus() {
+        fetch('/api/detection/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.active) {
+                    statusDot.className = 'status-dot status-active';
+                    statusText.textContent = 'Active';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                } else {
+                    statusDot.className = 'status-dot status-inactive';
+                    statusText.textContent = 'Inactive';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                }
+
+                activeDefects.textContent = data.stats.current_defects || 0;
+                totalDetected.textContent = data.stats.total_detected || 0;
+                
+                if (data.active) {
+                    detectionStatus.textContent = 'Detecting...';
+                } else {
+                    detectionStatus.textContent = 'Ready';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching status:', error);
+            });
+    }
+
+    startBtn.addEventListener('click', () => {
+        fetch('/api/detection/start', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Detection started:', data);
+                updateStatus();
+                if (!statusCheckInterval) {
+                    statusCheckInterval = setInterval(updateStatus, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error starting detection:', error);
+                alert('Failed to start detection. Please check console for details.');
+            });
+    });
+
+    stopBtn.addEventListener('click', () => {
+        fetch('/api/detection/stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Detection stopped:', data);
+                updateStatus();
+            })
+            .catch(error => {
+                console.error('Error stopping detection:', error);
+            });
+    });
+
+    // Initial status check
+    updateStatus();
+    statusCheckInterval = setInterval(updateStatus, 1000);
+</script>
+{% endblock %}
