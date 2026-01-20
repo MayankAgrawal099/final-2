@@ -6,7 +6,7 @@ A production-ready, real-time YOLO-based defect detection system for packaged wa
 
 - **Real-time Detection**: Live video streaming with YOLO object detection
 - **External USB Webcam Support**: Configurable camera index for external webcams
-- **Defect Classification**: Detects cracks, scratches, missing labels, wrong labels, missing caps, and wrong cap colors
+- **Defect Classification**: Bottle shape (i.e. crumbled, not-crumbled), missing labels, bottle cap (i.e. cap, no cap)
 - **Web Dashboard**: Interactive web interface with live feed, analytics, and defect history
 - **Database Logging**: MongoDB integration for defect storage and analysis
 - **Dark Theme UI**: Modern, responsive dark theme interface
@@ -271,16 +271,15 @@ train: images/train
 val: images/val
 
 # Number of classes
-nc: 6
+nc: 5
 
-# Class names
+# class names
 names:
-  0: crack
-  1: scratch
-  2: missing_label
-  3: wrong_label
-  4: missing_cap
-  5: wrong_cap_color
+  0: cap
+  1: crumbled
+  2: label
+  3: no-cap
+  4: not-crumbled
 ```
 
 **Step 3: Collect and Annotate Images**
@@ -338,12 +337,11 @@ MODEL_PATH = r"runs/detect/bottle_defects/weights/best.pt"
 
 # Ensure class names match your data.yaml
 DEFECT_CLASSES = {
-    0: "crack",
-    1: "scratch", 
-    2: "missing_label",
-    3: "wrong_label",
-    4: "missing_cap",
-    5: "wrong_cap_color"
+  0: "cap"
+  1: "crumbled"
+  2: "label"
+  3: "no-cap"
+  4: "not-crumbled"
 }
 ```
 
